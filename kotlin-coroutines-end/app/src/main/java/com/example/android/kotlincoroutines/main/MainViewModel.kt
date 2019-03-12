@@ -21,8 +21,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.kotlincoroutines.util.singleArgViewModelFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * MainViewModel designed to store and manage UI-related data in a lifecycle conscious way. This
@@ -110,14 +112,22 @@ class MainViewModel(private val repository: TitleRepository) : ViewModel() {
      */
     private fun launchDataLoad(block: suspend () -> Unit): Job {
         return viewModelScope.launch {
-            try {
-                _spinner.value = true
-                block()
-            } catch (error: TitleRefreshError) {
-                _snackBar.value = error.message
-            } finally {
-                _spinner.value = false
-            }
+            block()
         }
+    }
+
+    suspend fun fetchDocs() {                                       // main thread
+        val result = get("developer.android.com")      // main thread
+        show(result)                                                            // main thread
+    }
+
+    suspend fun get(url: String) {                                 // main thread
+        withContext(Dispatchers.IO) {                          // thread optimized for IO
+            /* perform network IO here */                    // thread optimized for IO
+        }                                                                                  // main thread
+    }
+
+    fun show(result: Unit) {
+
     }
 }
